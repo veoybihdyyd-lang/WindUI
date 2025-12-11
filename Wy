@@ -1,0 +1,140 @@
+--====================================================
+-- 🧩 สคริปต์ UI เมนู + เดินเร็ว + ออโต้ล็อก + บินลอยนิ่ง
+--====================================================
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+local UIS = game:GetService("UserInputService")
+local camera = workspace.CurrentCamera
+
+--====================================================
+-- 🔧 สร้าง UI เมนู
+--====================================================
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 260)
+frame.Position = UDim2.new(0, 20, 0.5, -130)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "เมนูฟีเจอร์"
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- ฟังก์ชันสร้างปุ่ม
+local function createButton(text, y)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(1, -20, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    return btn
+end
+
+--====================================================
+-- 🏃 ปุ่มเดินเร็ว
+--====================================================
+local speedList = {1, 1.5, 2, 2.5, 3, 3.5}
+local speedIndex = 1
+
+local walkButton = createButton("ความเร็ว: 1x", 40)
+
+walkButton.MouseButton1Click:Connect(function()
+    speedIndex += 1
+    if speedIndex > #speedList then speedIndex = 1 end
+
+    local mul = speedList[speedIndex]
+    hum.WalkSpeed = 16 * mul
+    walkButton.Text = "ความเร็ว: " .. mul .. "x"
+end)
+
+--====================================================
+-- 🎯 ออโต้ล็อก (ล็อกศัตรูในบ้าน)
+--====================================================
+local lockOn = false
+local lockButton = createButton("ออโต้ล็อก: ปิด", 80)
+
+local function getNearestEnemy()
+    local enemiesFolder = workspace:FindFirstChild("บ้าน") -- 👈 ศัตรูอยู่ในบ้าน
+    if not enemiesFolder then return nil end
+
+    local nearest = nil
+    local distMin = 999
+
+    for _, enemy in pairs(enemiesFolder:GetChildren()) do
+        if enemy:FindFirstChild("HumanoidRootPart") then
+            local dist = (enemy.HumanoidRootPart.Position - root.Position).Magnitude
+            if dist < distMin then
+                distMin = dist
+                nearest = enemy
+            end
+        end
+    end
+
+    return nearest
+end
+
+lockButton.MouseButton1Click:Connect(function()
+    lockOn = not lockOn
+    lockButton.Text = "ออโต้ล็อก: " .. (lockOn and "เปิด" or "ปิด")
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if lockOn then
+            local target = getNearestEnemy()
+            if target then
+                camera.CFrame = CFrame.new(camera.CFrame.Position, target.HumanoidRootPart.Position)
+            end
+        end
+    end
+end)
+
+--====================================================
+-- 🕊️ บินแบบ “ลอยนิ่ง”
+--====================================================
+local flying = false
+local flyButton = createButton("บิน: ปิด", 120)
+
+local bv = Instance.new("BodyVelocity")
+bv.MaxForce = Vector3.new(100000, 100000, 100000)
+bv.Velocity = Vector3.new(0, 0, 0)
+
+flyButton.MouseButton1Click:Connect(function()
+    flying = not flying
+    flyButton.Text = "บิน: " .. (flying and "เปิด" or "ปิด")
+
+    if flying then
+        bv.Parent = root
+        hum.PlatformStand = true
+    else
+        bv.Parent = nil
+        hum.PlatformStand = false
+    end
+end)
+
+-- ควบคุมทิศทางตอนบิน
+task.spawn(function()
+    while task.wait() do
+        if flying then
+            local move = Vector3.new(0, 0, 0)
+            if UIS:IsKeyDown(Enum.KeyCode.W) then move += root.CFrame.LookVector * 30 end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then move -= root.CFrame.LookVector * 30 end
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0, 20, 0) end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move += Vector3.new(0, -20, 0) end
+
+            bv.Velocity = move
+        end
+    end
+end)
+
+--====================================================
+-- 📌 จบสคริปต์
+--====================================================
