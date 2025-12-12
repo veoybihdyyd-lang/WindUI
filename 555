@@ -1,0 +1,14 @@
+local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 1      -- ทำให้มองไม่เห็น
+                part.CanCollide = false    -- ไม่ให้ชน
+            elseif part:IsA("Decal") then
+                part.Transparency = 1
+            end
+        end
+    end)
+end)
