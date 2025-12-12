@@ -1,0 +1,59 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/dist/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "TON",
+    Author = "ไส่ไม่ไส่ก็ได้
+    Folder = "TON",
+    Icon = "map",
+    IconSize = 44,
+    NewElements = true,
+    HideSearchBar = false,
+    DarkMode = true,
+    OpenButton = {
+        Title = "RIP",
+        CornerRadius = UDim.new(1,0),
+        StrokeThickness = 3,
+        Enabled = true,
+        Draggable = true,
+        OnlyMobile = false,
+        Color = ColorSequence.new(Color3.fromHex("#30FF6A"), Color3.fromHex("#e7ff2f"))
+    },
+    KeySystem = {
+        Title = "TON",
+        Note = "ไส่ไม่ไส่ก็ได้",
+        KeyValidator = function(EnteredKey)
+            return EnteredKey == "TON"
+        end
+    }
+})
+local Players = game:GetService("Players")
+
+-- ฟังก์ชันค้นหาผู้เล่นตามชื่อ
+local function GetPlayerByName(name)
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Name:lower():find(name:lower()) then
+            return plr
+        end
+    end
+    return nil
+end
+
+-- เลือกชื่อที่ต้องการล็อก
+local nameToLock = "ชื่อผู้เล่นที่ต้องการล็อก"
+local lockedPlayer = GetPlayerByName(nameToLock)
+
+if lockedPlayer then
+    print("ล็อกผู้เล่นสำเร็จ:", lockedPlayer.Name)
+
+    -- ตัวอย่าง: ติดตามตำแหน่งของผู้เล่น
+    lockedPlayer.CharacterAdded:Connect(function(char)
+        local hrp = char:WaitForChild("HumanoidRootPart")
+        while hrp do
+            print("ตำแหน่งของผู้เล่น:", hrp.Position)
+            task.wait(0.5)
+        end
+    end)
+
+else
+    warn("ไม่พบผู้เล่นที่ชื่อ:", nameToLock)
+end
